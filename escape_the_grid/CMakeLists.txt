@@ -18,10 +18,14 @@ link_directories("C:/SFML-3.0.0/lib")
 # Define una variable para contener todos los archivos fuente
 set(SOURCE_FILES
     src/main.cpp
+    src/Game.cpp
 )
 # Ejecutable principal
 # Define el ejecutable y el cpp principal del proyecto.
 add_executable(escape_the_grid ${SOURCE_FILES})
+
+# Agrega el directorio include a las rutas de búsqueda
+target_include_directories(escape_the_grid PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Linkeo estático de SFML + dependencias del sistema
 target_link_libraries(escape_the_grid
