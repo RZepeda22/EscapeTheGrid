@@ -1,0 +1,19 @@
+# Archivos de compilación de CMake
+build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Binarios
+*.exe
+*.out
+*.dll
+*.so
+*.a
+
+# Archivos de IDE
+.vscode/
+.vs/
+*.suo
+*.user
