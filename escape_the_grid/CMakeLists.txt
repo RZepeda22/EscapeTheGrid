@@ -19,6 +19,8 @@ link_directories("C:/SFML-3.0.0/lib")
 set(SOURCE_FILES
     src/main.cpp
     src/Game.cpp
+    src/DrawMap.cpp
+    src/TriangularGrid.cpp
 )
 # Ejecutable principal
 # Define el ejecutable y el cpp principal del proyecto.

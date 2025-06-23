@@ -1,14 +1,23 @@
+#include <iostream>
 #include "Game.hpp" // Incluimos la definición de nuestra clase Game
+#include "DrawMap.hpp"  // Incluimos la función para dibujar el mapa
+constexpr unsigned short HEIGHT = 720;
+constexpr unsigned short WIDTH = 1280;
+#include <cmath>
 
 // Constructor: Se llama automáticamente cuando se crea un objeto Game.
 // Aquí inicializamos los miembros de la clase.
 Game::Game() :
-    mWindow(sf::VideoMode({200, 200}), "SFML works!"), // Inicializamos la ventana con tamaño y título.
-    mPlayer(100.f) // Inicializamos el círculo (que ahora llamamos mPlayer) con un radio de 100.f.
+    mWindow(sf::VideoMode({WIDTH, HEIGHT}), "Escape The Grid - Team 11 - Boveda Genetica", sf::Style::Close),
+    mGameMode(GameMode::Manual),
+    mPlayerPosition({1, 2}), // Posición inicial
+    mTurnCounter(0),
+    mGameSolved(false),
+    mPulseIntensity(0.0f)
+    
 {
-    // Configuramos el color del círculo. Esto se hace en el constructor
-    // porque es una configuración inicial que solo necesita hacerse una vez.
-    mPlayer.setFillColor(sf::Color::Green);
+    // Inicializar las celdas adyacentes para la posición inicial
+    mAdjacentCells = mGrid.getAdjacentCells(mPlayerPosition.first, mPlayerPosition.second);
 }
 
 // El método principal que contiene el bucle del juego.
@@ -33,6 +42,92 @@ void Game::processEvents()
         {
             mWindow.close(); // Cerramos la ventana.
         }
+
+        // Evento de mouse presionado
+        /*if (event->is<sf::Event::MouseButtonPressed>()) {
+            const sf::Event::MouseButtonPressed* mouseButtonEvent = event->getIf<sf::Event::MouseButtonPressed>();
+            if (mouseButtonEvent->button == sf::Mouse::Button::Left && mGameMode == GameMode::Manual && !mGameSolved)
+            {
+                std::cout << "Clic izquierdo en: (" << mouseButtonEvent->position.x 
+                         << ", " << mouseButtonEvent->position.y << ")" << std::endl;
+                std::pair<int, int> clickedCell = mGrid.getClickedCell(mouseButtonEvent->position.x, mouseButtonEvent->position.y);
+                
+                if (clickedCell.first != -1 && clickedCell.second != -1)
+                {
+                    // Verificar si la celda clickeada es adyacente al jugador
+                    if (mGrid.isAdjacent(mPlayerPosition, clickedCell))
+                    {
+                        // Mover el jugador
+                        mPlayerPosition = clickedCell;
+                        mTurnCounter++;
+                        
+                        // Actualizar las celdas adyacentes para la nueva posición
+                        mAdjacentCells = mGrid.getAdjacentCells(mPlayerPosition.first, mPlayerPosition.second);
+                        
+                        std::cout << "Jugador movido a: (" << clickedCell.first 
+                                 << ", " << clickedCell.second << ") - Turno: " << mTurnCounter << std::endl;
+                        
+                        // Verificar condición de victoria
+                        // if (mPlayerPosition == FINISH_POSITION) {
+                        //     mGameSolved = true;
+                        //     std::cout << "¡Juego completado en " << mTurnCounter << " turnos!" << std::endl;
+                        // }
+                    }
+                    else
+                    {
+                        std::cout << "Movimiento inválido: la celda no es adyacente" << std::endl;
+                    }
+                }
+            }
+            else if (mouseButtonEvent->button == sf::Mouse::Button::Right)
+            {
+                std::cout << "Clic derecho en: (" << mouseButtonEvent->position.x 
+                         << ", " << mouseButtonEvent->position.y << ")" << std::endl;
+            }
+        }*/
+
+
+          if (event->is<sf::Event::MouseButtonPressed>()) {
+            const sf::Event::MouseButtonPressed* mouseButtonEvent = event->getIf<sf::Event::MouseButtonPressed>();
+            if (mouseButtonEvent->button == sf::Mouse::Button::Left && mGameMode == GameMode::Manual && !mGameSolved)
+            {
+                std::cout << "Clic izquierdo en: (" << mouseButtonEvent->position.x 
+                         << ", " << mouseButtonEvent->position.y << ")" << std::endl;
+                std::pair<int, int> clickedCell = mGrid.getClickedCell(mouseButtonEvent->position.x, mouseButtonEvent->position.y);
+                
+                if (clickedCell.first != -1 && clickedCell.second != -1)
+                {
+                    if (mGrid.isAdjacent(mPlayerPosition, clickedCell))
+                    {
+                        // Mover el jugador
+                        mPlayerPosition = clickedCell;
+                        mTurnCounter++;
+                        
+                        // Actualizar las celdas adyacentes para la nueva posición
+                        mAdjacentCells = mGrid.getAdjacentCells(mPlayerPosition.first, mPlayerPosition.second);
+                        
+                        std::cout << "Jugador movido a: (" << clickedCell.first 
+                                 << ", " << clickedCell.second << ") - Turno: " << mTurnCounter << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Movimiento inválido: la celda no es adyacente" << std::endl;
+                        std::cout << "Celda clickeada: (" << clickedCell.first << ", " << clickedCell.second << ")" << std::endl;
+                        std::cout << "Posición actual: (" << mPlayerPosition.first << ", " << mPlayerPosition.second << ")" << std::endl;
+                    }
+                }
+                else
+                {
+                    std::cout << "Click fuera del grid" << std::endl;
+                }
+            }
+            else if (mouseButtonEvent->button == sf::Mouse::Button::Right)
+            {
+                std::cout << "Clic derecho en: (" << mouseButtonEvent->position.x 
+                         << ", " << mouseButtonEvent->position.y << ")" << std::endl;
+            }
+        }
+
         // Aquí podrías añadir más lógica para otros tipos de eventos, como:
         // if (event->is<sf::Event::KeyPressed>()) {
         //     // Lógica para cuando se presiona una tecla.
@@ -44,15 +139,17 @@ void Game::processEvents()
 // pero aquí iría el código para mover el jugador, actualizar puntuaciones, etc.
 void Game::update()
 {
-    // Por ahora, no hay lógica de actualización específica aquí.
-    // Si quisieras que el círculo se moviera o cambiara de tamaño con el tiempo,
-    // ese código iría aquí.
+    // Actualizar animación de pulso para celdas adyacentes
+    float time = mAnimationClock.getElapsedTime().asSeconds();
+    mPulseIntensity = (std::sin(time * 3.0f) + 1.0f) * 0.5f; // Valor entre 0 y 1, velocidad ajustable
 }
 
 // Dibuja los elementos en la ventana.
 void Game::render()
 {
-    mWindow.clear();       // Limpia la ventana con el color por defecto (negro).
-    mWindow.draw(mPlayer); // Dibuja nuestro círculo (mPlayer) en la ventana.
+    mWindow.clear(sf::Color::White);       // Limpia la ventana con el color por defecto (negro).
+    // Usar la versión con efectos visuales
+    draw_map(mWindow, mPlayerPosition, mAdjacentCells, mPulseIntensity);
     mWindow.display();     // Muestra en pantalla todo lo que se ha dibujado.
 }
+

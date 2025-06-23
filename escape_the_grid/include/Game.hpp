@@ -1,7 +1,12 @@
-#ifndef _GAME_HPP_
-#define _GAME_HPP_
+#pragma once
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
+#include "TriangularGrid.hpp" 
+enum class GameMode {
+    Manual,
+    Auto
+};
 
 class Game {
 public:
@@ -15,7 +20,20 @@ private:
 
 private:
   sf::RenderWindow mWindow;
-  sf::CircleShape mPlayer;
-};
 
-#endif // _GAME_HPP_
+  // Estado del juego
+  GameMode mGameMode;
+  std::pair<int, int> mPlayerPosition;
+  std::vector<std::pair<int, int>> mAdjacentCells;
+  int mTurnCounter;
+  bool mGameSolved;
+
+
+  // Para animación
+  sf::Clock mAnimationClock;
+  float mPulseIntensity;
+
+  // Grid triangular
+  TriangularGrid mGrid;
+
+};
