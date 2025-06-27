@@ -8,7 +8,7 @@ std::pair<int, int> TriangularGrid::getClickedCell(int mouseX, int mouseY) const
     // Aproximación inicial más precisa
     int col = static_cast<int>((mouseX - GridConfig::ORIGIN_X) / (GridConfig::CELL_SIZE * 0.5f));
     int row = static_cast<int>((mouseY - GridConfig::ORIGIN_Y) / GridConfig::CELL_SIZE);
-    
+    std::cout << "Celdas" << col << row  << std::endl;
     // Limitar a rangos válidos
     col = std::max(0, std::min(GridConfig::COLUMNS - 1, col));
     row = std::max(0, std::min(GridConfig::ROWS - 1, row));
@@ -22,6 +22,8 @@ std::pair<int, int> TriangularGrid::getClickedCell(int mouseX, int mouseY) const
     
     for (const auto& candidate : candidates)
     {
+        std::cout << "CeldasM" << col << row  << std::endl;
+        std::cout << "------------------------------------------" << std::endl;
         if (isValidCell(candidate.first, candidate.second))
         {
             if (isPointInTriangle(mouseX, mouseY, candidate.first, candidate.second))
@@ -52,8 +54,10 @@ std::vector<std::pair<int, int>> TriangularGrid::getAdjacentCells(int col, int r
 {
     std::vector<std::pair<int, int>> adjacents;
     
+    // 1. VERIFICAR SI LA CELDA ES VÁLIDA
     if (!isValidCell(col, row)) return adjacents;
     
+    // 2. DETERMINAR ORIENTACIÓN DEL TRIÁNGULO
     if (isTrianglePointingUp(col, row)) {
         // Triángulo hacia ARRIBA (△)
         // Comparte aristas con:
@@ -72,7 +76,10 @@ std::vector<std::pair<int, int>> TriangularGrid::getAdjacentCells(int col, int r
     std::vector<std::pair<int, int>> validAdjacents;
     for (const auto& cell : adjacents)
     {
-        if (isValidCell(cell.first, cell.second))
+        GameConfig::Cell cellType = GameConfig::gameMap[col][row];
+        //std::cout << "Celda: " << cellType << " ";
+        //std::cout << "col: " << col << " row: " << row << std::endl;
+        if (isValidCell(cell.first, cell.second)  )  //&& cellType == GameConfig::Cell::Empty
         {
             validAdjacents.push_back(cell);
         }
@@ -81,15 +88,25 @@ std::vector<std::pair<int, int>> TriangularGrid::getAdjacentCells(int col, int r
     return validAdjacents;
 }
 
+// Función para verificar si una celda está dentro de los límites del grid
 bool TriangularGrid::isValidCell(int col, int row) const
 {
+    // Verificar que la columna esté entre 0 y COLUMNS-1 (inclusive)
+    // Y que la fila esté entre 0 y ROWS-1 (inclusive)
+    
     return col >= 0 && col < GridConfig::COLUMNS && row >= 0 && row < GridConfig::ROWS;
+    
+    //return cellType != GameConfig::Cell::Invalid && cellType != GameConfig::Cell
+
 }
 
+// Función para verificar si dos celdas son adyacentes entre sí
 bool TriangularGrid::isAdjacent(const std::pair<int, int>& cell1, const std::pair<int, int>& cell2) const
 {
+    // Obtener todas las celdas adyacentes a la primera celda
     std::vector<std::pair<int, int>> adjacents = getAdjacentCells(cell1.first, cell1.second);
     
+    // Buscar si la segunda celda está en la lista de adyacentes de la primera
     for (const auto& adj : adjacents)
     {
         if (adj.first == cell2.first && adj.second == cell2.second)
